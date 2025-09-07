@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Standard {
+  ATLAS
+  KSSU
+  CUSTOM
+}
+
+enum ItemType {
+  DRAWER
+  INSERT_1_1
+  INSERT_1_2
+  INSERT_1_3
+  CART
+  OVEN
+  MISC
+}
+
+enum PlanStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Org {
+  id    String @id @default(cuid())
+  name  String
+  users User[]
+  aircraft Aircraft[]
+  plans   Plan[]
+  catalog CatalogItem[]
+}
+
+model User {
+  id     String @id @default(cuid())
+  email  String @unique
+  name   String?
+  image  String?
+  orgId  String
+  org    Org     @relation(fields: [orgId], references: [id])
+  role   String  @default("planner")
+  createdAt DateTime @default(now())
+}
+
+model AircraftType {
+  id    String @id @default(cuid())
+  oem   String
+  model String
+  iata  String?
+  icao  String?
+  aircraft Aircraft[]
+}
+
+model Aircraft {
+  id     String @id @default(cuid())
+  tail   String
+  orgId  String
+  org    Org @relation(fields: [orgId], references: [id])
+  typeId String
+  type   AircraftType @relation(fields: [typeId], references: [id])
+  stations GalleyStation[]
+  plans    Plan[]
+}
+
+model GalleyStation {
+  id        String @id @default(cuid())
+  aircraftId String
+  aircraft  Aircraft @relation(fields: [aircraftId], references: [id])
+  code      String   // e.g., FWD-G1
+  widthMm   Int
+  heightMm  Int
+  depthMm   Int
+  standard  Standard
+}
+
+model CatalogItem {
+  id      String @id @default(cuid())
+  orgId   String?
+  org     Org?    @relation(fields: [orgId], references: [id])
+  code    String
+  name    String
+  standard Standard
+  widthMm Int
+  heightMm Int
+  depthMm Int
+  tareWeightGrams Int
+  maxLoadGrams    Int?
+  type    ItemType
+}
+
+model Plan {
+  id        String @id @default(cuid())
+  orgId     String
+  org       Org @relation(fields: [orgId], references: [id])
+  aircraftId String
+  aircraft  Aircraft @relation(fields: [aircraftId], references: [id])
+  name      String
+  status    PlanStatus @default(DRAFT)
+  currentVersionId String?
+  versions  PlanVersion[]
+}
+
+model PlanVersion {
+  id        String @id @default(cuid())
+  planId    String
+  plan      Plan @relation(fields: [planId], references: [id])
+  version   Int    @default(1)
+  note      String?
+  createdBy String
+  createdAt DateTime @default(now())
+  placements Placement[]
+  token     String @default(cuid()) // for share links
+}
+
+model Placement {
+  id            String @id @default(cuid())
+  planVersionId String
+  planVersion   PlanVersion @relation(fields: [planVersionId], references: [id])
+  stationId     String
+  station       GalleyStation @relation(fields: [stationId], references: [id])
+  catalogItemId String
+  item          CatalogItem @relation(fields: [catalogItemId], references: [id])
+  xMm           Int
+  yMm           Int
+  rotateDeg     Int @default(0)
+  qty           Int @default(1)
+  note          String?
+}
+
+model AuditLog {
+  id      String @id @default(cuid())
+  orgId   String
+  userId  String
+  action  String
+  ts      DateTime @default(now())
+}
