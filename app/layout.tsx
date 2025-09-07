@@ -1,4 +1,4 @@
-import "./src/styles/globals.css";
+import "@/src/styles/globals.css";
 import type { ReactNode } from "react";
 
 export const metadata = { title: "Galley Planner", description: "MVP starter" };

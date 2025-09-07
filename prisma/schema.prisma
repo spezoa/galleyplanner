@@ -45,6 +45,8 @@ model Aircraft {
   subvariant String? // e.g., NEO
   notes     String?
   galleys   Galley[]
+  loadPlans LoadPlan[]
+}
 }
 
 model Galley {
@@ -68,6 +70,8 @@ model Compartment {
   chilled    Boolean @default(false)
   gridX      Int     @default(1) // UI grid cols
   gridY      Int     @default(1) // UI grid rows
+  planItems  PlanItem[]
+}
 }
 
 model ContainerType {
@@ -105,6 +109,8 @@ model Product {
   unitWeightG Int
   tags       String[]
   allergens  String[]
+  kitItems   KitItem[]
+}
 }
 
 model Kit {
