@@ -49,3 +49,4 @@ A minimal, Paxia-like starter to design and publish aircraft galley plans with O
 - Designer is intentionally lightweight (no canvas libs). It validates bounds and snap-to-grid. Extend as needed.
 - The "publish" flow creates an immutable Plan Version with a tokenized share link for vendors to print maps/labels.
 # galleyplanner
+# galleyplanner
