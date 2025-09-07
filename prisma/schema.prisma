@@ -8,159 +8,156 @@ datasource db {
 }
 
 model Tenant {
-  id        String  @id @default(cuid())
-  name      String
-  users     UserRole[]
-  aircraft  Aircraft[]
-  products  Product[]
-  kits      Kit[]
+  id            String         @id @default(cuid())
+  name          String
+  users         UserRole[]
+  aircraft      Aircraft[]
+  products      Product[]
+  kits          Kit[]
   containerTypes ContainerType[]
-  containers Container[]
-  loadPlans LoadPlan[]
-  rules     Rule[]
-  createdAt DateTime @default(now())
+  containers    Container[]
+  loadPlans     LoadPlan[]
+  rules         Rule[]
+  createdAt     DateTime       @default(now())
 }
 
 model User {
-  id        String  @id @default(cuid())
-  email     String  @unique
+  id        String     @id @default(cuid())
+  email     String     @unique
   roles     UserRole[]
-  createdAt DateTime @default(now())
+  createdAt DateTime   @default(now())
 }
 
 model UserRole {
-  id        String @id @default(cuid())
-  user      User   @relation(fields: [userId], references: [id])
+  id        String  @id @default(cuid())
+  user      User    @relation(fields: [userId], references: [id])
   userId    String
-  tenant    Tenant @relation(fields: [tenantId], references: [id])
+  tenant    Tenant  @relation(fields: [tenantId], references: [id])
   tenantId  String
-  role      String // 'ADMIN' | 'PLANNER' | 'CATERER'
+  role      String  // 'ADMIN' | 'PLANNER' | 'CATERER'
 }
 
 model Aircraft {
-  id        String @id @default(cuid())
-  tenant    Tenant @relation(fields: [tenantId], references: [id])
-  tenantId  String
-  type      String // e.g., A320
-  subvariant String? // e.g., NEO
-  notes     String?
-  galleys   Galley[]
-  loadPlans LoadPlan[]
-}
+  id         String    @id @default(cuid())
+  tenant     Tenant    @relation(fields: [tenantId], references: [id])
+  tenantId   String
+  type       String    // e.g., A320
+  subvariant String?   // e.g., NEO
+  notes      String?
+  galleys    Galley[]
+  loadPlans  LoadPlan[]
 }
 
 model Galley {
-  id        String   @id @default(cuid())
-  aircraft  Aircraft @relation(fields: [aircraftId], references: [id])
-  aircraftId String
-  code      String // e.g., FWD1, AFT2
+  id           String        @id @default(cuid())
+  aircraft     Aircraft      @relation(fields: [aircraftId], references: [id])
+  aircraftId   String
+  code         String        // e.g., FWD1, AFT2
   compartments Compartment[]
 }
 
 model Compartment {
-  id         String  @id @default(cuid())
-  galley     Galley  @relation(fields: [galleyId], references: [id])
-  galleyId   String
-  code       String
-  std        String  // 'ATLAS' | 'KSSU'
-  widthMM    Int
-  heightMM   Int
-  depthMM    Int
-  maxWeightKG Float
-  chilled    Boolean @default(false)
-  gridX      Int     @default(1) // UI grid cols
-  gridY      Int     @default(1) // UI grid rows
-  planItems  PlanItem[]
-}
+  id           String    @id @default(cuid())
+  galley       Galley    @relation(fields: [galleyId], references: [id])
+  galleyId     String
+  code         String
+  std          String    // 'ATLAS' | 'KSSU'
+  widthMM      Int
+  heightMM     Int
+  depthMM      Int
+  maxWeightKG  Float
+  chilled      Boolean   @default(false)
+  gridX        Int       @default(1) // UI grid cols
+  gridY        Int       @default(1) // UI grid rows
+  planItems    PlanItem[]
 }
 
 model ContainerType {
-  id         String @id @default(cuid())
-  tenant     Tenant @relation(fields: [tenantId], references: [id])
-  tenantId   String
-  name       String // e.g., Full Cart, Half Cart, Atlas Drawer
-  std        String
-  widthMM    Int
-  heightMM   Int
-  depthMM    Int
-  tareWeightKG Float @default(0)
-  containers Container[]
+  id            String      @id @default(cuid())
+  tenant        Tenant      @relation(fields: [tenantId], references: [id])
+  tenantId      String
+  name          String      // e.g., Full Cart, Half Cart, Atlas Drawer
+  std           String
+  widthMM       Int
+  heightMM      Int
+  depthMM       Int
+  tareWeightKG  Float       @default(0)
+  containers    Container[]
 }
 
 model Container {
-  id           String @id @default(cuid())
-  tenant       Tenant @relation(fields: [tenantId], references: [id])
-  tenantId     String
-  containerType ContainerType @relation(fields: [containerTypeId], references: [id])
+  id             String        @id @default(cuid())
+  tenant         Tenant        @relation(fields: [tenantId], references: [id])
+  tenantId       String
+  containerType  ContainerType @relation(fields: [containerTypeId], references: [id])
   containerTypeId String
-  code         String // e.g., C01, D12
-  imageUrl     String?
+  code           String        // e.g., C01, D12
+  imageUrl       String?
 }
 
 model Product {
-  id         String @id @default(cuid())
-  tenant     Tenant @relation(fields: [tenantId], references: [id])
-  tenantId   String
-  sku        String
-  name       String
-  widthMM    Int
-  heightMM   Int
-  depthMM    Int
-  unitWeightG Int
-  tags       String[]
-  allergens  String[]
-  kitItems   KitItem[]
-}
+  id           String    @id @default(cuid())
+  tenant       Tenant    @relation(fields: [tenantId], references: [id])
+  tenantId     String
+  sku          String
+  name         String
+  widthMM      Int
+  heightMM     Int
+  depthMM      Int
+  unitWeightG  Int
+  tags         String[]
+  allergens    String[]
+  kitItems     KitItem[]
 }
 
 model Kit {
-  id         String @id @default(cuid())
-  tenant     Tenant @relation(fields: [tenantId], references: [id])
-  tenantId   String
-  name       String
-  items      KitItem[]
+  id       String    @id @default(cuid())
+  tenant   Tenant    @relation(fields: [tenantId], references: [id])
+  tenantId String
+  name     String
+  items    KitItem[]
 }
 
 model KitItem {
-  id         String @id @default(cuid())
-  kit        Kit    @relation(fields: [kitId], references: [id])
-  kitId      String
-  product    Product @relation(fields: [productId], references: [id])
-  productId  String
-  qty        Int
+  id        String   @id @default(cuid())
+  kit       Kit      @relation(fields: [kitId], references: [id])
+  kitId     String
+  product   Product  @relation(fields: [productId], references: [id])
+  productId String
+  qty       Int
 }
 
 model LoadPlan {
-  id         String @id @default(cuid())
-  tenant     Tenant @relation(fields: [tenantId], references: [id])
+  id         String     @id @default(cuid())
+  tenant     Tenant     @relation(fields: [tenantId], references: [id])
   tenantId   String
-  aircraft   Aircraft @relation(fields: [aircraftId], references: [id])
+  aircraft   Aircraft   @relation(fields: [aircraftId], references: [id])
   aircraftId String
   name       String
-  version    Int     @default(1)
-  status     String  @default("DRAFT")
+  version    Int        @default(1)
+  status     String     @default("DRAFT")
   items      PlanItem[]
   createdBy  String
-  createdAt  DateTime @default(now())
+  createdAt  DateTime   @default(now())
 }
 
 model PlanItem {
-  id           String  @id @default(cuid())
-  loadPlan     LoadPlan @relation(fields: [loadPlanId], references: [id])
-  loadPlanId   String
-  compartment  Compartment @relation(fields: [compartmentId], references: [id])
+  id            String      @id @default(cuid())
+  loadPlan      LoadPlan    @relation(fields: [loadPlanId], references: [id])
+  loadPlanId    String
+  compartment   Compartment @relation(fields: [compartmentId], references: [id])
   compartmentId String
-  refType      String // 'product' | 'kit' | 'container'
-  refId        String
-  qty          Int
-  posX         Int @default(0)
-  posY         Int @default(0)
+  refType       String      // 'product' | 'kit' | 'container'
+  refId         String
+  qty           Int
+  posX          Int         @default(0)
+  posY          Int         @default(0)
 }
 
 model Rule {
-  id         String @id @default(cuid())
-  tenant     Tenant @relation(fields: [tenantId], references: [id])
-  tenantId   String
-  type       String // e.g., 'MAX_WEIGHT', 'CHILLED_ONLY', 'NO_ALC_WITH_ICE'
-  params     Json
+  id       String   @id @default(cuid())
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  tenantId String
+  type     String   // 'MAX_WEIGHT', 'CHILLED_ONLY', 'NO_ALC_WITH_ICE'
+  params   Json
 }
