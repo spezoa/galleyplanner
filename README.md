@@ -50,3 +50,4 @@ A minimal, Paxia-like starter to design and publish aircraft galley plans with O
 - The "publish" flow creates an immutable Plan Version with a tokenized share link for vendors to print maps/labels.
 # galleyplanner
 # galleyplanner
+# galleyplanner
