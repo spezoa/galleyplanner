@@ -7,137 +7,154 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Standard {
-  ATLAS
-  KSSU
-  CUSTOM
-}
-
-enum ItemType {
-  DRAWER
-  INSERT_1_1
-  INSERT_1_2
-  INSERT_1_3
-  CART
-  OVEN
-  MISC
-}
-
-enum PlanStatus {
-  DRAFT
-  PUBLISHED
-  ARCHIVED
-}
-
-model Org {
-  id    String @id @default(cuid())
-  name  String
-  users User[]
-  aircraft Aircraft[]
-  plans   Plan[]
-  catalog CatalogItem[]
+model Tenant {
+  id        String  @id @default(cuid())
+  name      String
+  users     UserRole[]
+  aircraft  Aircraft[]
+  products  Product[]
+  kits      Kit[]
+  containerTypes ContainerType[]
+  containers Container[]
+  loadPlans LoadPlan[]
+  rules     Rule[]
+  createdAt DateTime @default(now())
 }
 
 model User {
-  id     String @id @default(cuid())
-  email  String @unique
-  name   String?
-  image  String?
-  orgId  String
-  org    Org     @relation(fields: [orgId], references: [id])
-  role   String  @default("planner")
+  id        String  @id @default(cuid())
+  email     String  @unique
+  roles     UserRole[]
   createdAt DateTime @default(now())
 }
 
-model AircraftType {
-  id    String @id @default(cuid())
-  oem   String
-  model String
-  iata  String?
-  icao  String?
-  aircraft Aircraft[]
+model UserRole {
+  id        String @id @default(cuid())
+  user      User   @relation(fields: [userId], references: [id])
+  userId    String
+  tenant    Tenant @relation(fields: [tenantId], references: [id])
+  tenantId  String
+  role      String // 'ADMIN' | 'PLANNER' | 'CATERER'
 }
 
 model Aircraft {
-  id     String @id @default(cuid())
-  tail   String
-  orgId  String
-  org    Org @relation(fields: [orgId], references: [id])
-  typeId String
-  type   AircraftType @relation(fields: [typeId], references: [id])
-  stations GalleyStation[]
-  plans    Plan[]
+  id        String @id @default(cuid())
+  tenant    Tenant @relation(fields: [tenantId], references: [id])
+  tenantId  String
+  type      String // e.g., A320
+  subvariant String? // e.g., NEO
+  notes     String?
+  galleys   Galley[]
 }
 
-model GalleyStation {
-  id        String @id @default(cuid())
-  aircraftId String
+model Galley {
+  id        String   @id @default(cuid())
   aircraft  Aircraft @relation(fields: [aircraftId], references: [id])
-  code      String   // e.g., FWD-G1
-  widthMm   Int
-  heightMm  Int
-  depthMm   Int
-  standard  Standard
-}
-
-model CatalogItem {
-  id      String @id @default(cuid())
-  orgId   String?
-  org     Org?    @relation(fields: [orgId], references: [id])
-  code    String
-  name    String
-  standard Standard
-  widthMm Int
-  heightMm Int
-  depthMm Int
-  tareWeightGrams Int
-  maxLoadGrams    Int?
-  type    ItemType
-}
-
-model Plan {
-  id        String @id @default(cuid())
-  orgId     String
-  org       Org @relation(fields: [orgId], references: [id])
   aircraftId String
-  aircraft  Aircraft @relation(fields: [aircraftId], references: [id])
-  name      String
-  status    PlanStatus @default(DRAFT)
-  currentVersionId String?
-  versions  PlanVersion[]
+  code      String // e.g., FWD1, AFT2
+  compartments Compartment[]
 }
 
-model PlanVersion {
-  id        String @id @default(cuid())
-  planId    String
-  plan      Plan @relation(fields: [planId], references: [id])
-  version   Int    @default(1)
-  note      String?
-  createdBy String
-  createdAt DateTime @default(now())
-  placements Placement[]
-  token     String @default(cuid()) // for share links
+model Compartment {
+  id         String  @id @default(cuid())
+  galley     Galley  @relation(fields: [galleyId], references: [id])
+  galleyId   String
+  code       String
+  std        String  // 'ATLAS' | 'KSSU'
+  widthMM    Int
+  heightMM   Int
+  depthMM    Int
+  maxWeightKG Float
+  chilled    Boolean @default(false)
+  gridX      Int     @default(1) // UI grid cols
+  gridY      Int     @default(1) // UI grid rows
 }
 
-model Placement {
-  id            String @id @default(cuid())
-  planVersionId String
-  planVersion   PlanVersion @relation(fields: [planVersionId], references: [id])
-  stationId     String
-  station       GalleyStation @relation(fields: [stationId], references: [id])
-  catalogItemId String
-  item          CatalogItem @relation(fields: [catalogItemId], references: [id])
-  xMm           Int
-  yMm           Int
-  rotateDeg     Int @default(0)
-  qty           Int @default(1)
-  note          String?
+model ContainerType {
+  id         String @id @default(cuid())
+  tenant     Tenant @relation(fields: [tenantId], references: [id])
+  tenantId   String
+  name       String // e.g., Full Cart, Half Cart, Atlas Drawer
+  std        String
+  widthMM    Int
+  heightMM   Int
+  depthMM    Int
+  tareWeightKG Float @default(0)
+  containers Container[]
 }
 
-model AuditLog {
-  id      String @id @default(cuid())
-  orgId   String
-  userId  String
-  action  String
-  ts      DateTime @default(now())
+model Container {
+  id           String @id @default(cuid())
+  tenant       Tenant @relation(fields: [tenantId], references: [id])
+  tenantId     String
+  containerType ContainerType @relation(fields: [containerTypeId], references: [id])
+  containerTypeId String
+  code         String // e.g., C01, D12
+  imageUrl     String?
+}
+
+model Product {
+  id         String @id @default(cuid())
+  tenant     Tenant @relation(fields: [tenantId], references: [id])
+  tenantId   String
+  sku        String
+  name       String
+  widthMM    Int
+  heightMM   Int
+  depthMM    Int
+  unitWeightG Int
+  tags       String[]
+  allergens  String[]
+}
+
+model Kit {
+  id         String @id @default(cuid())
+  tenant     Tenant @relation(fields: [tenantId], references: [id])
+  tenantId   String
+  name       String
+  items      KitItem[]
+}
+
+model KitItem {
+  id         String @id @default(cuid())
+  kit        Kit    @relation(fields: [kitId], references: [id])
+  kitId      String
+  product    Product @relation(fields: [productId], references: [id])
+  productId  String
+  qty        Int
+}
+
+model LoadPlan {
+  id         String @id @default(cuid())
+  tenant     Tenant @relation(fields: [tenantId], references: [id])
+  tenantId   String
+  aircraft   Aircraft @relation(fields: [aircraftId], references: [id])
+  aircraftId String
+  name       String
+  version    Int     @default(1)
+  status     String  @default("DRAFT")
+  items      PlanItem[]
+  createdBy  String
+  createdAt  DateTime @default(now())
+}
+
+model PlanItem {
+  id           String  @id @default(cuid())
+  loadPlan     LoadPlan @relation(fields: [loadPlanId], references: [id])
+  loadPlanId   String
+  compartment  Compartment @relation(fields: [compartmentId], references: [id])
+  compartmentId String
+  refType      String // 'product' | 'kit' | 'container'
+  refId        String
+  qty          Int
+  posX         Int @default(0)
+  posY         Int @default(0)
+}
+
+model Rule {
+  id         String @id @default(cuid())
+  tenant     Tenant @relation(fields: [tenantId], references: [id])
+  tenantId   String
+  type       String // e.g., 'MAX_WEIGHT', 'CHILLED_ONLY', 'NO_ALC_WITH_ICE'
+  params     Json
 }
